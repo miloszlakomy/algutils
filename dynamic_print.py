@@ -1,8 +1,14 @@
+import inspect
+import io
+import re
 import shutil
 from typing import Any
 
 
-def dprint(name: str, value: Any) -> None:
+def dprint(name: str, value: Any = None) -> None:
+    if value is None:
+        value = _parent_locals()[name]
+
     _DynamicPrintSingleton.set_name_to_value(name, value)
     _DynamicPrintSingleton.dprint()
 
@@ -15,10 +21,14 @@ def clear_and_finish() -> None:
     _DynamicPrintSingleton.clear_and_finish()
 
 
+def _parent_locals(depth:int = 1) -> dict[str, Any]:
+    return inspect.getouterframes(inspect.currentframe())[depth+1][0].f_locals
+
+
 class _DynamicPrintSingleton:
     _names: list[str] = []
     _names_to_values: dict[str, str] = {}
-    _last_number_of_lines_printed: int = 0
+    _last_print: str = ""
 
     def __init__(self) -> None:
         raise NotImplementedError()
@@ -41,6 +51,7 @@ class _DynamicPrintSingleton:
 
     @staticmethod
     def dprint() -> None:
+        _DynamicPrintSingleton._clear()
         _DynamicPrintSingleton._reset_cursor()
         _DynamicPrintSingleton._print_all()
 
@@ -48,35 +59,56 @@ class _DynamicPrintSingleton:
     def finish() -> None:
         _DynamicPrintSingleton._names.clear()
         _DynamicPrintSingleton._names_to_values.clear()
-        _DynamicPrintSingleton._last_number_of_lines_printed = 0
+        _DynamicPrintSingleton._last_print = ""
 
     @staticmethod
     def clear_and_finish() -> None:
-        terminal_width = shutil.get_terminal_size().columns
-
+        _DynamicPrintSingleton._clear()
         _DynamicPrintSingleton._reset_cursor()
-        for _ in range(_DynamicPrintSingleton._last_number_of_lines_printed):
-            print(" " * terminal_width)
-        _DynamicPrintSingleton._reset_cursor()
-
         _DynamicPrintSingleton.finish()
 
     @staticmethod
+    def _clear() -> None:
+        _DynamicPrintSingleton._reset_cursor()
+        # re ignores newlines
+        print(
+            re.sub(pattern=".", repl=" ", string=_DynamicPrintSingleton._last_print),
+            end="",
+        )
+
+    @staticmethod
     def _print_all() -> None:
+        stream = io.StringIO()
+
         for name in _DynamicPrintSingleton._names:
             value = _DynamicPrintSingleton._names_to_values[name]
-            print(f"{name}={value}")
+            stream.write(f"{name}={value}\n")
 
-        _DynamicPrintSingleton._last_number_of_lines_printed = len(
-            _DynamicPrintSingleton._names
+        print(
+            stream.getvalue(),
+            end="",
         )
+
+        _DynamicPrintSingleton._last_print = stream.getvalue()
 
     @staticmethod
     def _reset_cursor() -> None:
         _DynamicPrintSingleton._move_cursor_up(
-            number_of_lines=_DynamicPrintSingleton._last_number_of_lines_printed
+            number_of_lines=_str_height(_DynamicPrintSingleton._last_print)
         )
 
     @staticmethod
     def _move_cursor_up(number_of_lines: int) -> None:
         print(f"\033[{number_of_lines + 1}A")
+
+
+def _str_height(arg: Any) -> int:
+    s = str(arg)
+    lines = s.split("\n")
+
+    height = -1
+    terminal_width = shutil.get_terminal_size().columns
+    for line in lines:
+        height += len(line) // terminal_width + 1
+
+    return height
