@@ -1,5 +1,5 @@
 import pprint as pp
-from typing import Any
+from typing import Any, Optional
 
 import pygments
 import pygments.formatters
@@ -21,14 +21,18 @@ def cpprint(value: Any) -> None:
     print(cpformat(value))
 
 
-def cpformat(value:Any) -> str:
+def cpformat(value: Any) -> str:
     formatted_str = pp.pformat(value)
-    highlighted_formatted_str = _highlight(formatted_str, value_type = type(value))
+    highlighted_formatted_str = _highlight(formatted_str, value_type=type(value))
 
     return highlighted_formatted_str
 
 
-def _highlight(value: Any, lexer: pygments.lexer.Lexer = None, value_type: type = None) -> str:
+def _highlight(
+    value: Any,
+    lexer: Optional[pygments.lexer.Lexer] = None,
+    value_type: Optional[type] = None,
+) -> str:
     if lexer is None:
         lexer = _guess_lexer(
             value=value,
@@ -46,7 +50,7 @@ def _highlight(value: Any, lexer: pygments.lexer.Lexer = None, value_type: type 
     return highlighted_str.removesuffix("\n")
 
 
-def _guess_lexer(value: Any, value_type: type) -> pygments.lexer.Lexer:
+def _guess_lexer(value: Any, value_type: Optional[type]) -> pygments.lexer.Lexer:
     if value_type is None:
         value_type = type(value)
 
