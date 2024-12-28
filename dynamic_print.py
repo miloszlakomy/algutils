@@ -1,5 +1,6 @@
 import inspect
 import io
+import os
 import pprint as pp
 import re
 import shutil
@@ -18,8 +19,48 @@ def clear_and_finish() -> None:
     _DPS.clear_and_finish()
 
 
-def _parent_locals(depth: int = 1) -> dict[str, Any]:
-    return inspect.getouterframes(inspect.currentframe())[depth + 1][0].f_locals
+def _parent_module_calling_function_locals_and_globals() -> dict[str, Any]:
+    return _parent_locals_and_globals(depth=_current_module_frame_depth())
+
+
+def _parent_locals_and_globals(depth: int = 1) -> dict[str, Any]:
+    frame = inspect.getouterframes(inspect.currentframe())[depth + 1][0]
+
+    return {
+        **frame.f_globals,
+        **frame.f_locals,
+    }
+
+
+def _str_height(arg: Any) -> int:
+    s = str(arg)
+    lines = s.split("\n")
+
+    height = -1
+    terminal_width = shutil.get_terminal_size().columns
+    for line in lines:
+        height += len(line) // terminal_width + 1
+
+    return height
+
+
+def _current_module_name() -> str:
+    return _file_path_to_module_name(__file__)
+
+
+def _file_path_to_module_name(file_path: str) -> str:
+    return os.path.basename(file_path).removesuffix(".py")
+
+
+def _current_module_frame_depth() -> int:
+    depth = 0
+    for frame in inspect.getouterframes(inspect.currentframe()):
+        frame_module_name = _file_path_to_module_name(frame.filename)
+        if frame_module_name != _current_module_name():
+            break
+        depth += 1
+
+    return depth - 1
 
 
 class _DPS:
@@ -54,7 +95,7 @@ class _DPS:
     @staticmethod
     def dprint(name: str, value: Any = None) -> None:
         if value is None:
-            value = _parent_locals()[name]
+            value = _parent_module_calling_function_locals_and_globals()[name]
 
         _DPS.set_name_to_value(name, value)
 
@@ -77,9 +118,9 @@ class _DPS:
     @staticmethod
     def _clear() -> None:
         _DPS._reset_cursor()
-        # re ignores newlines
+        # Doesn't replace "\n". re ignores newlines with r"."
         print(
-            re.sub(pattern=".", repl=" ", string=_DPS._last_print),
+            re.sub(pattern=r".", repl=" ", string=_DPS._last_print),
             end="",
         )
 
@@ -105,15 +146,3 @@ class _DPS:
     @staticmethod
     def _move_cursor_up(number_of_lines: int) -> None:
         print(f"\033[{number_of_lines + 1}A")
-
-
-def _str_height(arg: Any) -> int:
-    s = str(arg)
-    lines = s.split("\n")
-
-    height = -1
-    terminal_width = shutil.get_terminal_size().columns
-    for line in lines:
-        height += len(line) // terminal_width + 1
-
-    return height
