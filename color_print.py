@@ -43,7 +43,7 @@ def _highlight(value: Any, lexer: pygments.lexer.Lexer = None, value_type: type 
         formatter=pygments.formatters.TerminalFormatter(),
     )
 
-    return highlighted_str
+    return highlighted_str.removesuffix("\n")
 
 
 def _guess_lexer(value: Any, value_type: type) -> pygments.lexer.Lexer:
