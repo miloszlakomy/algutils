@@ -2,6 +2,9 @@ import pprint as pp
 from typing import Any
 
 import pygments
+import pygments.formatters
+import pygments.lexer
+import pygments.lexers
 
 
 def cprint(value: Any) -> None:
