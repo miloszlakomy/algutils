@@ -1,14 +1,28 @@
 import inspect
 import io
 import os
-import pprint as pp
+from pprint import pformat
 import re
 import shutil
 from typing import Any
 
+from algutils.color_print import cformat, cpformat
 
-def dprint(name: str, value: Any = None) -> None:
-    _DPS.dprint(name, value)
+
+def dprint(
+    name: str,
+    value: Any = None,
+    use_color_print: bool = True,
+    use_pprint: bool = True,
+    use_pprint_for_strings: bool = False,
+) -> None:
+    _DPS.dprint(
+        name=name,
+        value=value,
+        use_color_print=use_color_print,
+        use_pprint=use_pprint,
+        use_pprint_for_strings=use_pprint_for_strings,
+    )
 
 
 def finish() -> None:
@@ -74,30 +88,23 @@ class _DPS:
         raise NotImplementedError()
 
     @staticmethod
-    def set_name_to_value(name: str, value: Any) -> None:
-        if name not in _DPS._names_to_values:
-            _DPS._names.append(name)
-
-        last_value_length = 0
-        if name in _DPS._names_to_values:
-            last_value_length = len(_DPS._names_to_values[name])
-
-        if isinstance(value, str):
-            str_value = value
-        else:
-            str_value = pp.pformat(value)
-
-        # Overwrite last value with space characters
-        _DPS._names_to_values[name] = str_value + " " * (
-            last_value_length - len(str_value)
-        )
-
-    @staticmethod
-    def dprint(name: str, value: Any = None) -> None:
+    def dprint(
+        name: str,
+        value: Any,
+        use_color_print: bool,
+        use_pprint: bool,
+        use_pprint_for_strings: bool,
+    ) -> None:
         if value is None:
             value = _parent_module_calling_function_locals_and_globals()[name]
 
-        _DPS.set_name_to_value(name, value)
+        _DPS._set_name_to_value(
+            name=name,
+            value=value,
+            use_color_print=use_color_print,
+            use_pprint=use_pprint,
+            use_pprint_for_strings=use_pprint_for_strings,
+        )
 
         _DPS._clear()
         _DPS._reset_cursor()
@@ -114,6 +121,47 @@ class _DPS:
         _DPS._clear()
         _DPS._reset_cursor()
         _DPS.finish()
+
+    @staticmethod
+    def _set_name_to_value(
+        name: str,
+        value: Any,
+        use_color_print: bool,
+        use_pprint: bool,
+        use_pprint_for_strings: bool,
+    ) -> None:
+        if name not in _DPS._names_to_values:
+            _DPS._names.append(name)
+
+        last_value_length = 0
+        if name in _DPS._names_to_values:
+            last_value_length = len(_DPS._names_to_values[name])
+
+        formatters = {
+            # Use pprint
+            True: {
+                # Use color_print
+                True: cpformat,
+                False: pformat,
+            },
+            False: {
+                True: cformat,
+                False: str,
+            },
+        }
+
+        format_str = formatters[use_pprint_for_strings][use_color_print]
+        format_any = formatters[use_pprint][use_color_print]
+
+        if isinstance(value, str):
+            str_value = format_str(value)
+        else:
+            str_value = format_any(value)
+
+        # Overwrite last value with space characters
+        _DPS._names_to_values[name] = str_value + " " * (
+            last_value_length - len(str_value)
+        )
 
     @staticmethod
     def _clear() -> None:
