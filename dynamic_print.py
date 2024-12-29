@@ -87,9 +87,9 @@ def _current_module_name() -> str:
 
 
 def _remove_ansi_escape_codes(text: str) -> str:
-    ansi_escape_pattern = re.compile(r'\x1b\[[0-?9;]*[mK]')
+    ansi_escape_pattern = re.compile(r"\x1b\[[0-?9;]*[mK]")
 
-    return ansi_escape_pattern.sub('', text)
+    return ansi_escape_pattern.sub("", text)
 
 
 class _DPS:
@@ -176,7 +176,9 @@ class _DPS:
 
         last_value_length = 0
         if name in _DPS._names_to_values:
-            last_value_length = len(_remove_ansi_escape_codes(_DPS._names_to_values[name]))
+            last_value_length = len(
+                _remove_ansi_escape_codes(_DPS._names_to_values[name])
+            )
 
         # Negative deltas are expected
         delta_length = last_value_length - value_length
@@ -189,7 +191,11 @@ class _DPS:
         _DPS._reset_cursor()
         # Doesn't replace "\n". re ignores newlines with r"."
         print(
-            re.sub(pattern=r".", repl=" ", string=_remove_ansi_escape_codes(_DPS._last_print)),
+            re.sub(
+                pattern=r".",
+                repl=" ",
+                string=_remove_ansi_escape_codes(_DPS._last_print),
+            ),
             end="",
         )
 
@@ -210,7 +216,9 @@ class _DPS:
 
     @staticmethod
     def _reset_cursor() -> None:
-        _DPS._move_cursor_up(number_of_lines=_str_height(_remove_ansi_escape_codes(_DPS._last_print)))
+        _DPS._move_cursor_up(
+            number_of_lines=_str_height(_remove_ansi_escape_codes(_DPS._last_print))
+        )
 
     @staticmethod
     def _move_cursor_up(number_of_lines: int) -> None:
