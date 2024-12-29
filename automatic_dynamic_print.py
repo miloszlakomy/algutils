@@ -1,5 +1,4 @@
 import functools
-import io
 import sys
 from typing import Any, Callable, Optional, TextIO
 
