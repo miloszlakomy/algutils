@@ -32,7 +32,7 @@ def adprint(
 
 
 def _current_module_name() -> str:
-    return algutils.utils._file_path_to_module_name(__file__)
+    return algutils.utils.file_path_to_module_name(__file__)
 
 
 class _ADPS:

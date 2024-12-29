@@ -74,7 +74,7 @@ def _module_frame_depth(
 
     frame_depth = 0
     for frame in inspect.getouterframes(inspect.currentframe()):
-        frame_module_name = algutils.utils._file_path_to_module_name(frame.filename)
+        frame_module_name = algutils.utils.file_path_to_module_name(frame.filename)
         if frame_module_name not in module_names:
             break
         frame_depth += 1
@@ -83,7 +83,7 @@ def _module_frame_depth(
 
 
 def _current_module_name() -> str:
-    return algutils.utils._file_path_to_module_name(__file__)
+    return algutils.utils.file_path_to_module_name(__file__)
 
 
 def _remove_ansi_escape_codes(text: str) -> str:
