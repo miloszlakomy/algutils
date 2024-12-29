@@ -15,7 +15,7 @@ def dprint(
     use_color_print: bool = True,
     use_pprint: bool = True,
     use_pprint_for_strings: bool = False,
-    skip_module_names: Optional[set] = None,
+    skip_module_names: Optional[set[str]] = None,
 ) -> None:
     _DPS.dprint(
         name=name,
@@ -36,7 +36,7 @@ def clear_and_finish() -> None:
 
 
 def _parent_module_calling_function_locals_and_globals(
-    skip_module_names: Optional[set],
+    skip_module_names: Optional[set[str]],
 ) -> dict[str, Any]:
     frame_depth = _module_frame_depth(skip_module_names=skip_module_names)
 
@@ -65,7 +65,7 @@ def _str_height(arg: Any) -> int:
 
 
 def _module_frame_depth(
-    skip_module_names: Optional[set],
+    skip_module_names: Optional[set[str]],
 ) -> int:
     module_names = {_current_module_name()}
 
@@ -109,7 +109,7 @@ class _DPS:
         use_color_print: bool,
         use_pprint: bool,
         use_pprint_for_strings: bool,
-        skip_module_names: Optional[set],
+        skip_module_names: Optional[set[str]],
     ) -> None:
         if value is None:
             value = _parent_module_calling_function_locals_and_globals(
