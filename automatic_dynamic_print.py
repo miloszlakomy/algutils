@@ -1,7 +1,7 @@
 import functools
 import io
 import sys
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TextIO
 
 import algutils.dynamic_print
 import algutils.utils
@@ -49,7 +49,7 @@ class _ADPS:
         def __exit__(self, *_: list[Any]) -> None:
             _ADPS._currently_inside_adprint_call = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError()
 
     @functools.cache
@@ -63,7 +63,7 @@ class _ADPS:
         _ADPS._cleanup_function = cleanup_function
 
     @staticmethod
-    def _apply_output_capture(stream: io.TextIOWrapper) -> None:
+    def _apply_output_capture(stream: TextIO) -> None:
         @functools.wraps(stream.write)
         def write(text: str) -> int:
             if _ADPS._currently_inside_adprint_call:
@@ -75,4 +75,4 @@ class _ADPS:
 
             return real_stream_write(text)
 
-        real_stream_write, stream.write = stream.write, write
+        real_stream_write, stream.write = stream.write, write  # type: ignore[method-assign]
