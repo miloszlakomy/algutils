@@ -10,8 +10,8 @@ import pygments.style
 import rich.console
 
 
-def cprint(value: Any) -> None:
-    print(cformat(value))
+def cprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
+    print(*(cformat(value) for value in values), **print_options)
 
 
 def cformat(value: Any) -> str:
@@ -38,10 +38,7 @@ def _highlight(
     style: pygments.style.Style = "borland",
 ) -> str:
     if lexer is None:
-        lexer = _guess_lexer(
-            value=value,
-            value_type=value_type,
-        )
+        lexer = pygments.lexers.PythonLexer()
 
     str_value = str(value)
 
@@ -52,32 +49,6 @@ def _highlight(
     )
 
     return highlighted_str.removesuffix("\n")
-
-
-def _guess_lexer(value: Any, value_type: Optional[type]) -> pygments.lexer.Lexer:
-    if value_type is None:
-        value_type = type(value)
-
-    if value_type is not str:
-        return pygments.lexers.PythonLexer()
-
-    str_value = value
-
-    try:
-        lexer = pygments.lexers.guess_lexer(str_value)
-    except pygments.util.ClassNotFound:
-        lexer = pygments.lexers.PythonLexer()
-
-    highlighted_str = _highlight(
-        value=value,
-        lexer=lexer,
-    )
-
-    ansi_esc_code_start_sequence = "\x1b["
-    if ansi_esc_code_start_sequence in highlighted_str:
-        return lexer
-
-    return pygments.lexers.PythonLexer()
 
 
 def _determine_formatter(style: pygments.style.Style) -> pygments.formatter.Formatter:
