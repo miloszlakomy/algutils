@@ -47,8 +47,11 @@ def _highlight(
         lexer=lexer,
         formatter=_determine_formatter(style=style),
     )
+    highlighted_str = highlighted_str.removesuffix("\n")
 
-    return highlighted_str.removesuffix("\n")
+    highlighted_str_without_underlines = _remove_underlines(highlighted_str)
+
+    return highlighted_str_without_underlines
 
 
 def _determine_formatter(style: pygments.style.Style) -> pygments.formatter.Formatter:
@@ -64,3 +67,20 @@ def _determine_formatter(style: pygments.style.Style) -> pygments.formatter.Form
     formatter = formatter_cls(style=style)
 
     return formatter
+
+
+def _remove_underlines(ansi_string: str):
+    # Define the ANSI escape codes for underlining
+    underline_ansi_escape_codes = {
+        # Underline start
+        "\x1b[4m",
+        "\x1b[04m",
+        # Underline end
+        "\x1b[24m",
+    }
+
+    # Remove underline start and end codes
+    for pattern in underline_ansi_escape_codes:
+        ansi_string = ansi_string.replace(pattern, "")
+
+    return ansi_string
