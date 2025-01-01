@@ -6,11 +6,11 @@ import algutils.dynamic_print
 import algutils.utils
 
 
-def adprint(
+def dprint(
     name: str,
     value: Any = None,
     use_color_print: bool = True,
-    use_pprint: bool = True,
+    use_pprint: bool = False,
     use_pprint_for_strings: bool = False,
     cleanup_function: Optional[Callable[[], None]] = None,
 ) -> None:
