@@ -9,9 +9,17 @@ import pygments.lexers
 import pygments.style
 import rich.console
 
+import algutils.utils
+
 
 def cprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
-    print(*(cformat(value) for value in values), **print_options)
+    if algutils.utils.is_stdout_a_terminal():
+        print(
+            *(cformat(value) for value in values),
+            **print_options,
+        )  # type: ignore[call-overload]
+    else:
+        print(*values, **print_options)  # type: ignore[call-overload]
 
 
 def cformat(value: Any) -> str:
@@ -20,13 +28,19 @@ def cformat(value: Any) -> str:
     return highlighted_str
 
 
-def cpprint(value: Any) -> None:
-    print(cpformat(value))
+def cpprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
+    if algutils.utils.is_stdout_a_terminal():
+        print(
+            *(cpformat(value) for value in values),
+            **print_options,
+        )  # type: ignore[call-overload]
+    else:
+        print(*values, **print_options)  # type: ignore[call-overload]
 
 
 def cpformat(value: Any) -> str:
     formatted_str = pp.pformat(value)
-    highlighted_formatted_str = _highlight(formatted_str, value_type=type(value))
+    highlighted_formatted_str = _highlight(formatted_str)
 
     return highlighted_formatted_str
 
@@ -34,7 +48,6 @@ def cpformat(value: Any) -> str:
 def _highlight(
     value: Any,
     lexer: Optional[pygments.lexer.Lexer] = None,
-    value_type: Optional[type] = None,
     style: pygments.style.Style = "borland",
 ) -> str:
     if lexer is None:
@@ -54,9 +67,12 @@ def _highlight(
     return highlighted_str_without_underlines
 
 
-def _determine_formatter(style: pygments.style.Style) -> pygments.formatter.Formatter:
+def _determine_formatter(
+    style: pygments.style.Style,
+) -> pygments.formatter.Formatter[Any]:
     color_support = rich.console.Console().style
 
+    formatter_cls: type[pygments.formatter.Formatter[Any]]
     if color_support == "truecolor":
         formatter_cls = pygments.formatters.TerminalTrueColorFormatter
     elif color_support == "256":
@@ -69,7 +85,7 @@ def _determine_formatter(style: pygments.style.Style) -> pygments.formatter.Form
     return formatter
 
 
-def _remove_underlines(ansi_string: str):
+def _remove_underlines(ansi_string: str) -> str:
     # Define the ANSI escape codes for underlining
     underline_ansi_escape_codes = {
         # Underline start
