@@ -14,7 +14,10 @@ import algutils.utils
 
 
 def cprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
-    if os.getenv("COLOR", default="").lower() == "always" or algutils.utils.is_stdout_a_terminal():
+    if (
+        os.getenv("COLOR", default="").lower() == "always"
+        or algutils.utils.is_stdout_a_terminal()
+    ):
         print(
             *(cformat(value) for value in values),
             **print_options,
@@ -30,7 +33,10 @@ def cformat(value: Any) -> str:
 
 
 def cpprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
-    if os.getenv("COLOR", default="").lower() == "always" or algutils.utils.is_stdout_a_terminal():
+    if (
+        os.getenv("COLOR", default="").lower() == "always"
+        or algutils.utils.is_stdout_a_terminal()
+    ):
         print(
             *(cpformat(value) for value in values),
             **print_options,
