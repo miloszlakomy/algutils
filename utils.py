@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import os
 import re
 import sys
@@ -26,3 +27,7 @@ def is_hashable(obj: Any) -> bool:
 
 def is_stdout_a_terminal() -> bool:
     return os.isatty(sys.stdout.fileno())
+
+
+def iterable_length(iterable: Iterable[Any]) -> int:
+    return sum(1 for _ in iterable)
