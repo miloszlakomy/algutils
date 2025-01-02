@@ -5,6 +5,24 @@ import sys
 from typing import Any
 
 
+def debug() -> bool:
+    return os.getenv("DEBUG") is not None or verbose_debug()
+
+
+def verbose_debug() -> bool:
+    return os.getenv("DEBUG", "").lower() in ["v", "verbose"] or very_verbose_debug()
+
+
+vdebug = verbose_debug
+
+
+def very_verbose_debug() -> bool:
+    return os.getenv("DEBUG", "").lower() in ["vv", "veryverbose", "very verbose"]
+
+
+vvdebug = very_verbose_debug
+
+
 def file_path_to_module_name(file_path: str) -> str:
     return os.path.basename(file_path).removesuffix(".py")
 
