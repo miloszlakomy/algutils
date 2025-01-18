@@ -34,11 +34,18 @@ def load_char_array(input_file: TextIO) -> CharArray:
     return char_array
 
 
+def string_to_char_array(string: str) -> CharArray:
+    char_array = np.array(string.split("\n"), dtype=str)
+    char_array = char_array.view("U1").reshape(char_array.size, -1)
+
+    return char_array
+
+
 def print_char_array(char_array: CharArray, prefix: Optional[str] = None) -> None:
     print(char_array_to_pretty_string(char_array, prefix))
 
 
-def char_array_to_pretty_string(
+def char_array_to_string(
     char_array: CharArray, prefix: Optional[str] = None
 ) -> str:
     string = "\n".join("".join(row_str) for row_str in char_array)
@@ -47,3 +54,6 @@ def char_array_to_pretty_string(
         string = f"{prefix}\n{string}"
 
     return string
+
+
+char_array_to_pretty_string = char_array_to_string
