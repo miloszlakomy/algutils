@@ -10,6 +10,7 @@ sys.path += [os.path.dirname(os.path.dirname(os.path.realpath(__file__)))]
 import numpy as np
 import typing
 import termios
+import contextlib
 from algutils.utils import *
 from algutils.np_array_to_braille import np_array_to_braille
 from algutils.braille_canvas import BrailleCanvas, Point, Rect
@@ -35,6 +36,17 @@ class Characters:
 
 class Escapes:
     MOVE_CURSOR_TO_ORIGIN = "\x1b[0;0H"
+    HIDE_CURSOR = "\x1b[?25l"
+    SHOW_CURSOR = "\x1b[?25h"
+
+
+@contextlib.contextmanager
+def hide_cursor():
+    sys.stdout.write(Escapes.HIDE_CURSOR)
+    sys.stdout.flush()
+    yield
+    sys.stdout.write(Escapes.SHOW_CURSOR)
+    sys.stdout.flush()
 
 
 class Plot:
@@ -121,9 +133,10 @@ class Plot:
         return "\n".join(lines)
 
 
-series = []
-for line in sys.stdin:
-    value = float(line)
-    series = (series + [value])[-100:]
-    sys.stdout.write(Escapes.MOVE_CURSOR_TO_ORIGIN + str(Plot(series)))
-    sys.stdout.flush()
+with hide_cursor():
+    series = []
+    for line in sys.stdin:
+        value = float(line)
+        series = (series + [value])[-100:]
+        sys.stdout.write(Escapes.MOVE_CURSOR_TO_ORIGIN + str(Plot(series)))
+        sys.stdout.flush()
