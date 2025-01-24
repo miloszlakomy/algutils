@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Iterable
 from copy import deepcopy
-from itertools import chain, dropwhile
+from itertools import chain
 import math
 from numbers import Integral, Real
 import os
@@ -246,10 +246,9 @@ def _impl_vector_range(start: Vector, stop: Vector, step: Vector) -> Generator[V
     initial_difference_signs = [np.sign(coord) for coord in difference]
 
     intermediate = deepcopy(start)
-    while (
-        not are_vectors_almost_equal(intermediate, stop)
-        and initial_difference_signs == [np.sign(coord) for coord in difference]
-    ):
+    while not are_vectors_almost_equal(
+        intermediate, stop
+    ) and initial_difference_signs == [np.sign(coord) for coord in difference]:
         yield deepcopy(intermediate)
         for i in range(number_of_dimensions):
             intermediate[i] += step[i]
@@ -291,10 +290,9 @@ def are_vectors_almost_collinear(u: Vector, v: Vector) -> bool:
     for i in range(len(minus_v)):
         minus_v[i] *= -1
 
-    return (
-        are_vectors_almost_equal(normalize_vector(u), normalize_vector(v))
-        or are_vectors_almost_equal(normalize_vector(u), normalize_vector(minus_v))
-    )
+    return are_vectors_almost_equal(
+        normalize_vector(u), normalize_vector(v)
+    ) or are_vectors_almost_equal(normalize_vector(u), normalize_vector(minus_v))
 
 
 def are_vectors_almost_equal(u: Vector, v: Vector) -> bool:
@@ -303,8 +301,6 @@ def are_vectors_almost_equal(u: Vector, v: Vector) -> bool:
             "Inconsistent number of dimensions."
             f" Got: `{are_vectors_almost_equal.__name__}(u={u}, v={v})'."
         )
-
-    number_of_dimensions = len(u)
 
     return all(math.isclose(u_i, v_i, abs_tol=1e-9) for u_i, v_i in zip(u, v))
 
@@ -369,3 +365,52 @@ def jiggle_vector(v: Vector) -> Vector:
         jiggled_vector[i] += EPSILON * random.uniform(-1, 1)
 
     return jiggled_vector
+
+
+def re_sub_all_found_characters_separately(
+    pattern: str,
+    character_repl: str,
+    string: str,
+    flags: int = re.NOFLAG,
+    *,
+    entire_pattern_repl: Optional[str] = None,
+    character_pattern: str = r".",  # Any character except newline.
+    character_flags: str = re.NOFLAG,
+):
+    offset = 0
+    matches_iterator: Iterator[re.Match]
+    matches_iterator = re.finditer(pattern=pattern, string=string, flags=flags)
+    for m in matches_iterator:
+        matched_string: str = m[0]
+        match_length = len(matched_string)
+
+        start: int
+        stop: int
+        start, stop = m.span()
+        start += offset
+        stop += offset
+
+        if entire_pattern_repl is None:
+            replaced_match: str = m[0]
+        else:
+            replaced_match: str = re.sub(
+                pattern=pattern, repl=entire_pattern_repl, string=m[0], flags=flags
+            )
+
+        replacement: str
+        replacement = replaced_characters_and_match = re.sub(
+            pattern=character_pattern,
+            repl=character_repl,
+            string=replaced_match,
+            flags=character_flags,
+        )
+
+        string = f"{string[:start]}{replacement}{string[stop:]}"
+
+        offset += len(replacement) - match_length
+
+    return string
+
+
+def remove_trailing_whitespace(string: str):
+    return re.sub(r"\s+$", r"", string, flags=re.MULTILINE)
