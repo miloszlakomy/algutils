@@ -39,12 +39,14 @@ class BrailleCanvas:
     DOTS_COLS_IN_CHAR = 2
     DOTS_Y_TO_X_RATIO = CHAR_Y_TO_X_RATIO * DOTS_COLS_IN_CHAR / DOTS_ROWS_IN_CHAR
     # 3d array
-    CHAR_DOTS_COORDS = np.array([
-        [(1.475, 0.7  ), (1.475, 1.475)],
-        [(2.225, 0.7  ), (2.225, 1.475)],
-        [(3.0  , 0.7  ), (3.0  , 1.475)],
-        [(3.775, 0.7  ), (3.775, 1.475)],
-    ])
+    CHAR_DOTS_COORDS = np.array(
+        [
+            [(1.475, 0.7  ), (1.475, 1.475)],
+            [(2.225, 0.7  ), (2.225, 1.475)],
+            [(3.0  , 0.7  ), (3.0  , 1.475)],
+            [(3.775, 0.7  ), (3.775, 1.475)],
+        ]
+    )
     CHAR_DOTS_MIN_X = min(x for y, x in chain(*CHAR_DOTS_COORDS))
     CHAR_DOTS_MAX_X = max(x for y, x in chain(*CHAR_DOTS_COORDS))
     CHAR_DOTS_MIN_Y = min(y for y, x in chain(*CHAR_DOTS_COORDS))
@@ -101,16 +103,14 @@ class BrailleCanvas:
             utils.multiply_vector(list(normalized_difference), times=offset)
         )
 
-        start_yx_coords = tuple(
-            utils.vectors_sum(list(start_yx_coords), offset_vector)
-        )
+        start_yx_coords = tuple(utils.vectors_sum(list(start_yx_coords), offset_vector))
         stop_yx_coords = tuple(
             utils.vectors_difference(list(stop_yx_coords), offset_vector)
         )
 
         dots_row_col_to_draw = OrderedSet()
         for yx_coords in chain(
-            utils.vector_range(list(start_yx_coords), list(stop_yx_coords), .5),
+            utils.vector_range(list(start_yx_coords), list(stop_yx_coords), 0.5),
             [stop_yx_coords],
         ):
             if self._out_of_bounds(yx_coords):
@@ -120,17 +120,20 @@ class BrailleCanvas:
 
             dots_row_col_to_draw.add(closest_dot_row_col)
 
-            if len(
-                dots_row_col_to_draw & {
-                    dot_row_col
-                    for dot_row_col
-                    in (
-                        (r-1, c-1), (r-1, c  ), (r-1, c+1),
-                        (r  , c-1), (r  , c  ), (r  , c+1),
-                        (r+1, c-1), (r+1, c  ), (r+1, c+1),
-                    )
-                }
-            ) > 2:
+            if (
+                len(
+                    dots_row_col_to_draw
+                    & {
+                        dot_row_col
+                        for dot_row_col in (
+                            (r - 1, c - 1), (r - 1, c    ), (r - 1, c + 1),
+                            (r    , c - 1), (r    , c    ), (r    , c + 1),
+                            (r + 1, c - 1), (r + 1, c    ), (r + 1, c + 1),
+                        )
+                    }
+                )
+                > 2
+            ):
                 dots_row_col_to_draw.pop(index=-2)
 
         for dot_row_col in dots_row_col_to_draw:
@@ -159,23 +162,19 @@ class BrailleCanvas:
             utils.multiply_vector(list(normalized_difference), times=offset)
         )
 
-        start_yx_coords = tuple(
-            utils.vectors_sum(list(start_yx_coords), offset_vector)
-        )
+        start_yx_coords = tuple(utils.vectors_sum(list(start_yx_coords), offset_vector))
         stop_yx_coords = tuple(
             utils.vectors_difference(list(stop_yx_coords), offset_vector)
         )
 
-        arrow_head_forward_unbound_vector = (
-            utils.multiply_vector(
-                utils.normalize_vector(
-                    utils.vectors_difference(
-                        list(stop_yx_coords),
-                        list(start_yx_coords),
-                    ),
+        arrow_head_forward_unbound_vector = utils.multiply_vector(
+            utils.normalize_vector(
+                utils.vectors_difference(
+                    list(stop_yx_coords),
+                    list(start_yx_coords),
                 ),
-                arrow_head_side_length,
-            )
+            ),
+            arrow_head_side_length,
         )
         # Equilateral triangle.
         arrow_head_vertices_unbound_vectors = [
@@ -194,8 +193,7 @@ class BrailleCanvas:
                 list(stop_yx_coords),
                 list(arrow_head_vertex_unbound_vector),
             )
-            for arrow_head_vertex_unbound_vector
-            in arrow_head_vertices_unbound_vectors
+            for arrow_head_vertex_unbound_vector in arrow_head_vertices_unbound_vectors
         ]
 
         self.draw_line(start_yx_coords, stop_yx_coords)
@@ -205,6 +203,9 @@ class BrailleCanvas:
                 self.draw_line(u, v)
 
     def write_text(self, yx_coords: tuple[int, int], text: str) -> None:
+        if self._out_of_bounds(yx_coords):
+            return
+
         char_row_col = self._yx_coords_to_char_row_col(yx_coords)
         self._texts_row_col_to_strings[char_row_col].append(text)
 
@@ -227,12 +228,15 @@ class BrailleCanvas:
         braille_array_string = np_array_to_braille(self.dots)
         char_array = string_to_char_array(braille_array_string)
 
-        for (y, x), text in self._texts_row_col_to_strings.items():
-            annotation_length = min(
-                len(text),
-                self.char_columns - x,
-            )
-            char_array[y, x : x + annotation_length] = list(text[:annotation_length])
+        for y, x in self._texts_row_col_to_strings:
+            for text in self._texts_row_col_to_strings[y, x]:
+                annotation_length = min(
+                    len(text),
+                    self.char_columns - x,
+                )
+                char_array[y, x : x + annotation_length] = list(
+                    text[:annotation_length]
+                )
 
         return char_array_to_string(char_array)
 
@@ -300,14 +304,18 @@ class BrailleCanvas:
             ),
         )
 
-        dot_row_col_character_offset = np.array([
-            char_row * _BC.DOTS_ROWS_IN_CHAR,
-            char_col * _BC.DOTS_COLS_IN_CHAR,
-        ])
+        dot_row_col_character_offset = np.array(
+            [
+                char_row * _BC.DOTS_ROWS_IN_CHAR,
+                char_col * _BC.DOTS_COLS_IN_CHAR,
+            ]
+        )
 
         return tuple(char_dot_row_col + dot_row_col_character_offset)
 
-    def _dot_row_col_to_yx_coords(self, dot_row_col: tuple[int, int]) -> tuple[int, int]:
+    def _dot_row_col_to_yx_coords(
+        self, dot_row_col: tuple[int, int]
+    ) -> tuple[int, int]:
         dot_row, dot_col = dot_row_col
 
         char_row, char_dot_row = divmod(dot_row, _BC.DOTS_ROWS_IN_CHAR)
@@ -332,10 +340,12 @@ _BC = BrailleCanvas
 
 
 def rotate_vector_clockwise(v: tuple[int, int], radians: float) -> tuple[int, int]:
-    z = (v[1] + 1j * v[0]) * (1j**(4/(2*math.pi)*radians))
+    z = (v[1] + 1j * v[0]) * (1j ** (4 / (2 * math.pi) * radians))
 
     return (z.imag, z.real)
 
 
-def rotate_vector_counterclockwise(v: tuple[int, int], radians: float) -> tuple[int, int]:
+def rotate_vector_counterclockwise(
+    v: tuple[int, int], radians: float
+) -> tuple[int, int]:
     return rotate_vector_clockwise(v, -radians)
