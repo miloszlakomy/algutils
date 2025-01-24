@@ -185,3 +185,12 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
+
+
+
+# MacOS temporary files
+.DS_Store
+.AppleDouble
+.Spotlight-V100
+.Trashes
+~*  # E.g. backup files.
