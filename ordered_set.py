@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+
 class OrderedSet(OrderedDict):
     def __init__(self, iterable=None):
         super().__init__()

@@ -45,9 +45,7 @@ def print_char_array(char_array: CharArray, prefix: Optional[str] = None) -> Non
     print(char_array_to_pretty_string(char_array, prefix))
 
 
-def char_array_to_string(
-    char_array: CharArray, prefix: Optional[str] = None
-) -> str:
+def char_array_to_string(char_array: CharArray, prefix: Optional[str] = None) -> str:
     string = "\n".join("".join(row_str) for row_str in char_array)
 
     if prefix is not None:
