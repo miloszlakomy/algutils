@@ -1,6 +1,7 @@
 from collections import defaultdict
 from itertools import chain
 import math
+import typing
 
 import numpy as np
 
@@ -9,6 +10,40 @@ from algutils.char_array import char_array_to_string, string_to_char_array
 from algutils.np_array_to_braille import np_array_to_braille
 from algutils.ordered_set import OrderedSet
 from algutils.utils import EPSILON
+
+
+class Point(typing.NamedTuple):
+    x: float
+    y: float
+
+
+class Rect(typing.NamedTuple):
+    top_left: Point
+    bottom_right: Point
+
+    @property
+    def top(self) -> float:
+        return self.top_left.y
+
+    @property
+    def left(self) -> float:
+        return self.top_left.x
+
+    @property
+    def bottom(self) -> float:
+        return self.bottom_right.y
+
+    @property
+    def right(self) -> float:
+        return self.bottom_right.x
+
+    @property
+    def width(self) -> float:
+        return self.right - self.left
+
+    @property
+    def height(self) -> float:
+        return self.bottom - self.top
 
 
 class BrailleCanvas:
@@ -208,6 +243,17 @@ class BrailleCanvas:
 
         char_row_col = self._yx_coords_to_char_row_col(yx_coords)
         self._texts_row_col_to_strings[char_row_col].append(text)
+
+    def rect(self) -> Rect:
+        """
+        Min/max coordinates of data presented on the plot, in plot coordinates.
+        """
+        return Rect(
+            top_left=Point(x=0, y=0),
+            bottom_right=Point(
+                x=self.char_columns * _BC.CHAR_WIDTH, y=self.char_rows * _BC.CHAR_HEIGHT
+            ),
+        )
 
     def bounds(self) -> tuple[float, float]:
         bottom_right_char_top_left_corner_canvas_yx = (
