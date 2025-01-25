@@ -156,11 +156,15 @@ class Plot:
         return "\n".join(lines)
 
 
-with hide_cursor(), use_alternate_screen():
-    series = []
-    for line in sys.stdin:
-        value = float(line)
-        series = (series + [value])[-100:]
-        sys.stdout.buffer.write(Escapes.MOVE_CURSOR_TO_ORIGIN)
-        sys.stdout.write(str(Plot(series)))
-        sys.stdout.flush()
+try:
+    with hide_cursor(), use_alternate_screen():
+        series = []
+        for line in sys.stdin:
+            value = float(line)
+            series = (series + [value])[-100:]
+            sys.stdout.buffer.write(Escapes.MOVE_CURSOR_TO_ORIGIN)
+            sys.stdout.write(str(Plot(series)))
+            sys.stdout.flush()
+except KeyboardInterrupt:
+    # do clean exit on Ctrl+C
+    pass
