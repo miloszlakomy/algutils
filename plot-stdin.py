@@ -35,18 +35,41 @@ class Characters:
 
 
 class Escapes:
-    MOVE_CURSOR_TO_ORIGIN = "\x1b[0;0H"
-    HIDE_CURSOR = "\x1b[?25l"
-    SHOW_CURSOR = "\x1b[?25h"
+    """
+    ANSI escape codes used to adjust terminal output.
+    """
+
+    ENABLE_ALTERNATE_SCREEN = b"\x1b[?1049h"
+    DISABLE_ALTERNATE_SCREEN = b"\x1b[?1049l"
+    MOVE_CURSOR_TO_ORIGIN = b"\x1b[0;0H"
+    HIDE_CURSOR = b"\x1b[?25l"
+    SHOW_CURSOR = b"\x1b[?25h"
+
+
+def ansi_scoped_enable(enable: bytes, disable: bytes):
+    sys.stdout.buffer.write(enable)
+    sys.stdout.flush()
+    try:
+        yield
+    finally:
+        sys.stdout.buffer.write(disable)
+        sys.stdout.flush()
 
 
 @contextlib.contextmanager
 def hide_cursor():
-    sys.stdout.write(Escapes.HIDE_CURSOR)
-    sys.stdout.flush()
-    yield
-    sys.stdout.write(Escapes.SHOW_CURSOR)
-    sys.stdout.flush()
+    yield from ansi_scoped_enable(Escapes.HIDE_CURSOR, Escapes.SHOW_CURSOR)
+
+
+@contextlib.contextmanager
+def use_alternate_screen():
+    """
+    Switches to terminal's "alternate screen", clearing the plot from terminal on exit.
+    """
+    yield from ansi_scoped_enable(
+        Escapes.ENABLE_ALTERNATE_SCREEN,
+        Escapes.DISABLE_ALTERNATE_SCREEN,
+    )
 
 
 class Plot:
@@ -133,10 +156,11 @@ class Plot:
         return "\n".join(lines)
 
 
-with hide_cursor():
+with hide_cursor(), use_alternate_screen():
     series = []
     for line in sys.stdin:
         value = float(line)
         series = (series + [value])[-100:]
-        sys.stdout.write(Escapes.MOVE_CURSOR_TO_ORIGIN + str(Plot(series)))
+        sys.stdout.buffer.write(Escapes.MOVE_CURSOR_TO_ORIGIN)
+        sys.stdout.write(str(Plot(series)))
         sys.stdout.flush()
