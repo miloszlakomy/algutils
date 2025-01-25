@@ -10,9 +10,9 @@ if [[ ! "$VIRTUAL_ENV" ]]; then
   if [[ ! -d "$VIRTUALENV_PATH" ]]; then
     echo "virtualenv $VIRTUALENV_PATH doesn't exist, initializing"
     virtualenv "$VIRTUALENV_PATH"
-    . "$VIRTUALENV_PATH/bin/activate"
-    pip install -r "$SCRIPT_DIR/requirements.txt"
   fi
+  . "$VIRTUALENV_PATH/bin/activate"
+  pip install -r "$SCRIPT_DIR/requirements.txt"
 fi
 
 python "$SCRIPT_DIR/plot-stdin.py"
