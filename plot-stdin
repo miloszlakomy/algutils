@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# directory containing current script
+readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+# expected path to the virtualenv, in case we're not in one already
+readonly VIRTUALENV_PATH='/tmp/plot-stdin-venv'
+
+if [[ ! "$VIRTUAL_ENV" ]]; then
+  echo "Not in virtualenv; using $VIRTUALENV_PATH"
+  if [[ ! -d "$VIRTUALENV_PATH" ]]; then
+    echo "virtualenv $VIRTUALENV_PATH doesn't exist, initializing"
+    virtualenv "$VIRTUALENV_PATH"
+    . "$VIRTUALENV_PATH/bin/activate"
+    pip install -r "$SCRIPT_DIR/requirements.txt"
+  fi
+fi
+
+python "$SCRIPT_DIR/plot-stdin.py"
