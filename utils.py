@@ -132,7 +132,7 @@ def vector_range(
     step: Optional[Real | Vector] = None,
     *,
     start: Optional[Vector] = None,
-) -> Generator[Vector]:
+) -> Generator[Vector, None, None]:
     if start is None and start_or_stop is None:
         raise ValueError(
             "Arguments `start' and `start_or_stop' can't both be None."
@@ -205,7 +205,9 @@ Ambiguous number of dimensions. Got:
     return _impl_vector_range(start, stop, step)
 
 
-def _impl_vector_range(start: Vector, stop: Vector, step: Vector) -> Generator[Vector]:
+def _impl_vector_range(
+    start: Vector, stop: Vector, step: Vector
+) -> Generator[Vector, None, None]:
     data_types = {type(coordinate) for coordinate in chain(start, stop, step)}
     if any(not issubclass(data_type, Integral) for data_type in data_types):
         if any(issubclass(data_type, Integral) for data_type in data_types):
