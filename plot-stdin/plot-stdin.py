@@ -5,7 +5,9 @@ import sys
 
 # Allow running the script without explicitly setting PYTHONPATH.
 # Not the best solution but hey, as long as it works.
-sys.path += [os.path.dirname(os.path.dirname(os.path.realpath(__file__)))]
+sys.path += [
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+]
 
 import numpy as np
 import typing
@@ -13,10 +15,10 @@ import termios
 import contextlib
 from algutils.utils import *
 from algutils.np_array_to_braille import np_array_to_braille
-from algutils.braille_canvas import BrailleCanvas, Point, Rect
+from algutils.braille_canvas import BrailleCanvas, Point, Rectangle
 
 
-def map_coords(coord: Point, src: Rect, dst: Rect) -> Point:
+def map_coords(coord: Point, src: Rectangle, dst: Rectangle) -> Point:
     scale = Point(x=dst.width / src.width, y=dst.height / src.height)
     offset = Point(x=dst.left - src.left * scale.x, y=dst.top - src.top * scale.y)
     return Point(x=coord.x * scale.x + offset.x, y=coord.y * scale.y + offset.y)
@@ -37,23 +39,28 @@ class Characters:
 class Escapes:
     """
     ANSI escape codes used to adjust terminal output.
+    See https://gist.github.com/ConnerWill/d4b6c776b509add763e17f9f113fd25b
     """
 
     ENABLE_ALTERNATE_SCREEN = b"\x1b[?1049h"
     DISABLE_ALTERNATE_SCREEN = b"\x1b[?1049l"
-    MOVE_CURSOR_TO_ORIGIN = b"\x1b[0;0H"
     HIDE_CURSOR = b"\x1b[?25l"
     SHOW_CURSOR = b"\x1b[?25h"
 
+    # 0;0 are 0-based line;column coordinates, with top-left being 0;0.
+    MOVE_CURSOR_TO_ORIGIN = b"\x1b[0;0H"
+
 
 def ansi_scoped_enable(enable: bytes, disable: bytes):
-    sys.stdout.buffer.write(enable)
-    sys.stdout.flush()
+    if os.isatty(sys.stdout.fileno()):
+        sys.stdout.buffer.write(enable)
+        sys.stdout.flush()
     try:
         yield
     finally:
-        sys.stdout.buffer.write(disable)
-        sys.stdout.flush()
+        if os.isatty(sys.stdout.fileno()):
+            sys.stdout.buffer.write(disable)
+            sys.stdout.flush()
 
 
 @contextlib.contextmanager
@@ -74,7 +81,13 @@ def use_alternate_screen():
 
 class Plot:
     def __init__(self, series: typing.List[float]):
-        self.term_rows, self.term_cols = termios.tcgetwinsize(sys.stdout)
+        if os.isatty(sys.stdout.fileno()):
+            self.term_rows, self.term_cols = termios.tcgetwinsize(sys.stdout)
+        else:
+            self.term_rows, self.term_cols = (
+                os.getenv("ROWS", default=50),
+                os.getenv("COLS", default=200),
+            )
         self.series = series
         y_tics = [
             min(series)
@@ -91,11 +104,11 @@ class Plot:
 
         # Rectangles representing the value (src) and canvas (dst) coordinate space
         # Used to convert incoming value series into something canvas will understand
-        src_rect = Rect(
+        src_rect = Rectangle(
             top_left=Point(x=float(0), y=max(series)),
             bottom_right=Point(x=float(len(series)), y=min(series)),
         )
-        dst_rect = self.canvas.rect()
+        dst_rect = self.canvas.bounds_rectangle()
 
         if src_rect.width == 0 or src_rect.height == 0:
             return
@@ -105,7 +118,7 @@ class Plot:
             # BrailleCanvas expects y,x order
             return (mapped.y, mapped.x)
 
-        points = [convert(Point(idx, val)) for idx, val in enumerate(series)]
+        points = [convert(Point(x=idx, y=val)) for idx, val in enumerate(series)]
 
         for u, v in zip(points[:-1], points[1:]):
             self.canvas.draw_line(u, v)
@@ -131,6 +144,19 @@ class Plot:
 
     @property
     def x_axis(self) -> typing.List[str]:
+        """
+        A list of strings representing the entire line containing the X axis of
+        the plot and its labels.
+
+        The elements are intended to be appended to rendered plot, one element
+        per line.
+
+        First element includes padding for the labels of the Y axis and
+        ASCII-art of the X-axis.
+
+        Second element includes min and max values of the visible plot.
+        It's not really related to the X axis, but oh well.
+        """
         lines = [
             (" " * self.y_axis_margin)
             + Characters.AXIS_ORIGIN
@@ -142,6 +168,13 @@ class Plot:
 
     @property
     def y_axis(self) -> typing.List[str]:
+        """
+        A list of strings representing the Y axis and its labels.
+
+        Each element includes a Y-axis label, optionally left-padded, and a
+        part of the ASCII-art of the Y axis.
+        Each element should be prepended to corresponding line of the braille plot.
+        """
         top_fmt = "{{:>{}}} {}".format(self.y_axis_margin - 1, Characters.AXIS_Y_END)
         mid_fmt = "{{:>{}}} {}".format(self.y_axis_margin - 1, Characters.AXIS_Y)
         return [top_fmt.format(self.y_tics[0])] + [
@@ -151,20 +184,30 @@ class Plot:
     def __str__(self) -> str:
         plot = str(self.canvas)
         plot_lines = plot.split("\n")
-        lines = [prefix + plot for prefix, plot in zip(self.y_axis, plot_lines)]
+        lines = [
+            prefix + plot_line for prefix, plot_line in zip(self.y_axis, plot_lines)
+        ]
         lines += self.x_axis
         return "\n".join(lines)
 
 
-try:
-    with hide_cursor(), use_alternate_screen():
-        series = []
-        for line in sys.stdin:
-            value = float(line)
-            series = (series + [value])[-100:]
-            sys.stdout.buffer.write(Escapes.MOVE_CURSOR_TO_ORIGIN)
-            sys.stdout.write(str(Plot(series)))
-            sys.stdout.flush()
-except KeyboardInterrupt:
-    # do clean exit on Ctrl+C
-    pass
+def main():
+    try:
+        with hide_cursor(), use_alternate_screen():
+            series = []
+            for line in sys.stdin:
+                value = float(line)
+                series = (series + [value])[-100:]
+                if os.isatty(sys.stdout.fileno()):
+                    sys.stdout.buffer.write(Escapes.MOVE_CURSOR_TO_ORIGIN)
+                else:
+                    sys.stdout.write("\n")
+                sys.stdout.write(str(Plot(series)))
+                sys.stdout.flush()
+    except KeyboardInterrupt:
+        # do clean exit on Ctrl+C
+        pass
+
+
+if __name__ == "__main__":
+    main()

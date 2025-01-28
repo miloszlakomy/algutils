@@ -13,11 +13,11 @@ from algutils.utils import EPSILON
 
 
 class Point(typing.NamedTuple):
-    x: float
     y: float
+    x: float
 
 
-class Rect(typing.NamedTuple):
+class Rectangle(typing.NamedTuple):
     top_left: Point
     bottom_right: Point
 
@@ -244,14 +244,13 @@ class BrailleCanvas:
         char_row_col = self._yx_coords_to_char_row_col(yx_coords)
         self._texts_row_col_to_strings[char_row_col].append(text)
 
-    def rect(self) -> Rect:
-        """
-        Min/max coordinates of data presented on the plot, in plot coordinates.
-        """
-        return Rect(
-            top_left=Point(x=0, y=0),
+    def bounds_rectangle(self) -> Rectangle:
+        """Min/max coordinates of data presented on the plot, in plot coordinates."""
+        return Rectangle(
+            top_left=Point(y=0, x=0),
             bottom_right=Point(
-                x=self.char_columns * _BC.CHAR_WIDTH, y=self.char_rows * _BC.CHAR_HEIGHT
+                y=self.char_rows * _BC.CHAR_HEIGHT,
+                x=self.char_columns * _BC.CHAR_WIDTH,
             ),
         )
 

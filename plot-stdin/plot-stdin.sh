@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Reads a stream of floating-point values from stdin and plots them using braille ascii-art.
+#
+# Example:
+#   seq 100 | ./plot-stdin.sh
+
 # directory containing current script
 readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 # expected path to the virtualenv, in case we're not in one already
@@ -12,7 +17,12 @@ if [[ ! "$VIRTUAL_ENV" ]]; then
     virtualenv "$VIRTUALENV_PATH"
   fi
   . "$VIRTUALENV_PATH/bin/activate"
-  pip install -r "$SCRIPT_DIR/requirements.txt"
 fi
 
-python "$SCRIPT_DIR/plot-stdin.py"
+pip install -r "$SCRIPT_DIR/requirements.txt"
+
+if [[ "$PROFILE" ]]; then
+  python -m cProfile -o "$PROFILE" "$SCRIPT_DIR/plot-stdin.py"
+else
+  python "$SCRIPT_DIR/plot-stdin.py"
+fi
