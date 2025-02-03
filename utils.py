@@ -80,18 +80,18 @@ EPSILON = 1e-9
 
 
 def debug() -> bool:
-    return os.getenv("DEBUG") is not None or verbose_debug()
+    return os.getenv("ALGDEBUG") is not None or verbose_debug()
 
 
 def verbose_debug() -> bool:
-    return os.getenv("DEBUG", "").lower() in ["v", "verbose"] or very_verbose_debug()
+    return os.getenv("ALGDEBUG", "").lower() in ["v", "verbose"] or very_verbose_debug()
 
 
 vdebug = verbose_debug
 
 
 def very_verbose_debug() -> bool:
-    return os.getenv("DEBUG", "").lower() in ["vv", "veryverbose", "very verbose"]
+    return os.getenv("ALGDEBUG", "").lower() in ["vv", "veryverbose", "very verbose"]
 
 
 vvdebug = very_verbose_debug
