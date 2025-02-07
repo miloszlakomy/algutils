@@ -1,425 +1,111 @@
 import importlib
+import itertools
+import os
+import sys
+from typing import Any
 
 
-LIBRARY_PATHS = [
-    "__future__",
-    "__main__",
-    "_thread",
-    "abc",
-    "argparse",
-    "array",
-    "ast",
-    "asyncio",
-    "asyncio.base_events",
-    "asyncio.base_futures",
-    "asyncio.base_subprocess",
-    "asyncio.base_tasks",
-    "asyncio.constants",
-    "asyncio.coroutines",
-    "asyncio.events",
-    "asyncio.exceptions",
-    "asyncio.format_helpers",
-    "asyncio.futures",
-    "asyncio.locks",
-    "asyncio.log",
-    "asyncio.mixins",
-    "asyncio.proactor_events",
-    "asyncio.protocols",
-    "asyncio.queues",
-    "asyncio.runners",
-    "asyncio.selector_events",
-    "asyncio.sslproto",
-    "asyncio.staggered",
-    "asyncio.streams",
-    "asyncio.subprocess",
-    "asyncio.taskgroups",
-    "asyncio.tasks",
-    "asyncio.threads",
-    "asyncio.timeouts",
-    "asyncio.transports",
-    "asyncio.trsock",
-    "asyncio.unix_events",
-    "asyncio.windows_events",
-    "asyncio.windows_utils",
-    "atexit",
-    "base64",
-    "bdb",
-    "binascii",
-    "bisect",
-    "builtins",
-    "bz2",
-    "calendar",
-    "cmath",
-    "cmd",
-    "code",
-    "codecs",
-    "codeop",
-    "collections",
-    "collections.abc",
-    "colorsys",
-    "compileall",
-    "concurrent",
-    "concurrent.futures",
-    "concurrent.futures._base",
-    "concurrent.futures.process",
-    "concurrent.futures.thread",
-    "configparser",
-    "contextlib",
-    "contextvars",
-    "copy",
-    "copyreg",
-    "csv",
-    "ctypes",
-    "ctypes._aix",
-    "ctypes._endian",
-    "ctypes.macholib",
-    "ctypes.macholib.dyld",
-    "ctypes.macholib.dylib",
-    "ctypes.macholib.framework",
-    "ctypes.util",
-    "ctypes.wintypes",
-    "curses",
-    "curses.ascii",
-    "curses.has_key",
-    "curses.panel",
-    "curses.textpad",
-    "dataclasses",
-    "datetime",
-    "dbm",
-    "dbm.dumb",
-    "dbm.gnu",
-    "dbm.ndbm",
-    "dbm.sqlite3",
-    "decimal",
-    "difflib",
-    "dis",
-    "doctest",
-    "email",
-    "email._encoded_words",
-    "email._header_value_parser",
-    "email._parseaddr",
-    "email._policybase",
-    "email.base64mime",
-    "email.charset",
-    "email.contentmanager",
-    "email.encoders",
-    "email.errors",
-    "email.feedparser",
-    "email.generator",
-    "email.header",
-    "email.headerregistry",
-    "email.iterators",
-    "email.message",
-    "email.mime",
-    "email.mime.application",
-    "email.mime.audio",
-    "email.mime.base",
-    "email.mime.image",
-    "email.mime.message",
-    "email.mime.multipart",
-    "email.mime.nonmultipart",
-    "email.mime.text",
-    "email.parser",
-    "email.policy",
-    "email.quoprimime",
-    "email.utils",
-    "ensurepip",
-    "ensurepip._bundled",
-    "ensurepip._uninstall",
-    "enum",
-    "errno",
-    "faulthandler",
-    "fcntl",
-    "filecmp",
-    "fileinput",
-    "fnmatch",
-    "fractions",
-    "ftplib",
-    "functools",
-    "gc",
-    "getopt",
-    "getpass",
-    "gettext",
-    "glob",
-    "graphlib",
-    "grp",
-    "gzip",
-    "hashlib",
-    "heapq",
-    "hmac",
-    "html",
-    "html.entities",
-    "html.parser",
-    "http",
-    "http.client",
-    "http.cookiejar",
-    "http.cookies",
-    "http.server",
-    "imaplib",
-    "importlib",
-    "importlib._abc",
-    "importlib._bootstrap",
-    "importlib._bootstrap_external",
-    "importlib.abc",
-    "importlib.machinery",
-    "importlib.metadata",
-    "importlib.metadata._adapters",
-    "importlib.metadata._collections",
-    "importlib.metadata._functools",
-    "importlib.metadata._itertools",
-    "importlib.metadata._meta",
-    "importlib.metadata._text",
-    "importlib.metadata.diagnose",
-    "importlib.readers",
-    "importlib.resources",
-    "importlib.resources._adapters",
-    "importlib.resources._common",
-    "importlib.resources._functional",
-    "importlib.resources._itertools",
-    "importlib.resources.abc",
-    "importlib.resources.readers",
-    "importlib.resources.simple",
-    "importlib.simple",
-    "importlib.util",
-    "inspect",
-    "io",
-    "ipaddress",
-    "itertools",
-    "json",
-    "json.decoder",
-    "json.encoder",
-    "json.scanner",
-    "json.tool",
-    "keyword",
-    "linecache",
-    "locale",
-    "logging",
-    "logging.config",
-    "logging.handlers",
-    "lzma",
-    "mailbox",
-    "marshal",
-    "math",
-    "mimetypes",
-    "mmap",
-    "modulefinder",
-    "msvcrt",
-    "multiprocessing",
-    "multiprocessing.connection",
-    "multiprocessing.context",
-    "multiprocessing.dummy",
-    "multiprocessing.dummy.connection",
-    "multiprocessing.forkserver",
-    "multiprocessing.heap",
-    "multiprocessing.managers",
-    "multiprocessing.pool",
-    "multiprocessing.popen_fork",
-    "multiprocessing.popen_forkserver",
-    "multiprocessing.popen_spawn_posix",
-    "multiprocessing.popen_spawn_win32",
-    "multiprocessing.process",
-    "multiprocessing.queues",
-    "multiprocessing.reduction",
-    "multiprocessing.resource_sharer",
-    "multiprocessing.resource_tracker",
-    "multiprocessing.shared_memory",
-    "multiprocessing.sharedctypes",
-    "multiprocessing.spawn",
-    "multiprocessing.synchronize",
-    "multiprocessing.util",
-    "netrc",
-    "numbers",
-    "operator",
-    "optparse",
-    "os",
-    "os.path",
-    "pathlib",
-    "pathlib._abc",
-    "pathlib._local",
-    "pdb",
-    "pickle",
-    "pickletools",
-    "pkgutil",
-    "platform",
-    "plistlib",
-    "poplib",
-    "posix",
-    "pprint",
-    "pty",
-    "pwd",
-    "py_compile",
-    "pyclbr",
-    "pydoc",
-    "queue",
-    "quopri",
-    "random",
-    "re",
-    "re._casefix",
-    "re._compiler",
-    "re._constants",
-    "re._parser",
-    "readline",
-    "reprlib",
-    "resource",
-    "rlcompleter",
-    "runpy",
-    "sched",
-    "secrets",
-    "select",
-    "selectors",
-    "shelve",
-    "shlex",
-    "shutil",
-    "signal",
-    "site",
-    "smtplib",
-    "socket",
-    "socketserver",
-    "sqlite3",
-    "sqlite3.dbapi2",
-    "sqlite3.dump",
-    "ssl",
-    "stat",
-    "statistics",
-    "string",
-    "stringprep",
-    "struct",
-    "subprocess",
-    "symtable",
-    "sys",
-    "sysconfig",
-    "syslog",
-    "tabnanny",
-    "tarfile",
-    "tempfile",
-    "termios",
-    "test",
-    "test.support",
-    "test.support.bytecode_helper",
-    "test.support.import_helper",
-    "test.support.os_helper",
-    "test.support.script_helper",
-    "test.support.socket_helper",
-    "test.support.threading_helper",
-    "test.support.warnings_helper",
-    "textwrap",
-    "threading",
-    "time",
-    "timeit",
-    "tkinter",
-    "tkinter.colorchooser",
-    "tkinter.commondialog",
-    "tkinter.constants",
-    "tkinter.dialog",
-    "tkinter.dnd",
-    "tkinter.filedialog",
-    "tkinter.font",
-    "tkinter.messagebox",
-    "tkinter.scrolledtext",
-    "tkinter.simpledialog",
-    "tkinter.ttk",
-    "token",
-    "tokenize",
-    "tomllib",
-    "tomllib._parser",
-    "tomllib._re",
-    "tomllib._types",
-    "trace",
-    "traceback",
-    "tracemalloc",
-    "tty",
-    "turtle",
-    "types",
-    "typing",
-    "unicodedata",
-    "unittest",
-    "unittest._log",
-    "unittest.async_case",
-    "unittest.case",
-    "unittest.loader",
-    "unittest.main",
-    "unittest.mock",
-    "unittest.result",
-    "unittest.runner",
-    "unittest.signals",
-    "unittest.suite",
-    "unittest.util",
-    "urllib",
-    "urllib.error",
-    "urllib.parse",
-    "urllib.request",
-    "urllib.response",
-    "urllib.robotparser",
-    "uuid",
-    "venv",
-    "venv.scripts",
-    "venv.scripts.common",
-    "venv.scripts.posix",
-    "warnings",
-    "wave",
-    "weakref",
-    "webbrowser",
-    "winreg",
-    "winsound",
-    "wsgiref",
-    "wsgiref.handlers",
-    "wsgiref.headers",
-    "wsgiref.simple_server",
-    "wsgiref.types",
-    "wsgiref.util",
-    "wsgiref.validate",
-    "xml",
-    "xml.dom",
-    "xml.dom.NodeFilter",
-    "xml.dom.domreg",
-    "xml.dom.expatbuilder",
-    "xml.dom.minicompat",
-    "xml.dom.minidom",
-    "xml.dom.pulldom",
-    "xml.dom.xmlbuilder",
-    "xml.etree",
-    "xml.etree.ElementInclude",
-    "xml.etree.ElementPath",
-    "xml.etree.ElementTree",
-    "xml.etree.cElementTree",
-    "xml.parsers",
-    "xml.parsers.expat",
-    "xml.sax",
-    "xml.sax._exceptions",
-    "xml.sax.expatreader",
-    "xml.sax.handler",
-    "xml.sax.saxutils",
-    "xml.sax.xmlreader",
-    "xmlrpc",
-    "xmlrpc.client",
-    "xmlrpc.server",
-    "zipapp",
-    "zipfile",
-    "zipfile._path",
-    "zipfile._path.glob",
-    "zipimport",
-    "zlib",
-    "zoneinfo",
-    "zoneinfo._common",
-    "zoneinfo._tzpath",
-    "zoneinfo._zoneinfo",
-]
+class _Everything:
+    class _Globals:
+        def __getattr__(self, name: str) -> Any:
+            try:
+                return globals()[name]
+            except KeyError:
+                raise AttributeError(f"_Globals has no attribute '{name}'")
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            globals()[name] = value
 
 
-for library_path in LIBRARY_PATHS:
-    try:
-        exec(f"import {library_path}")
-    except ModuleNotFoundError as e:
-        if str(e) == "No module named '_gdbm'":
-            pass
-        elif str(e) == "No module named 'msvcrt'":
-            pass
-        elif str(e).startswith("No module named 'win"):
-            pass
-        else:
-            raise
-    except ImportError as e:
-        if str(e) == "win32 only":
-            pass
-        else:
-            raise
+    class _LazyImport:
+        def __init__(self, name: str, parent) -> None:
+            self._name = name
+            self._parent = parent
+
+        def __getattr__(self, attribute_name: str) -> Any:
+            module = importlib.import_module(self._name)
+            edge = self._name.rpartition(".")[-1]
+            setattr(self._parent, edge, module)
+            for child_name in _Everything._get_module_children_names(module=module):
+                _Everything._LazyImport._lazy_import(name=child_name)
+            return getattr(module, attribute_name)
+
+        @staticmethod
+        def _lazy_import(name: str) -> None:
+            path = name.split(".")
+            parent = _Everything._Globals()
+            for depth, edge in enumerate(path):
+                if isinstance(parent, _Everything._LazyImport):
+                    return
+                try:
+                    parent = getattr(parent, edge)
+                    # Returns if the entire name has been traversed.
+                except AttributeError:
+                    lazy_import = _Everything._LazyImport(
+                        name=".".join(path[: depth + 1]),
+                        parent=parent,
+                    )
+                    setattr(parent, edge, lazy_import)
+                    return
+
+    class _LazyImportAs:
+        def __init__(self, name: str, as_name: str) -> None:
+            self._name = name
+            self._as_name = as_name
+
+        def __getattr__(self, attribute_name: str) -> Any:
+            attribute = getattr(globals()[self._name], attribute_name)
+            globals()[self._as_name] = globals()[self._name]
+            return attribute
+
+        @staticmethod
+        def _lazy_import_as(name: str, as_name: str) -> None:
+            _Everything._LazyImport._lazy_import(name=name)
+            if as_name in globals():
+                return
+            globals()[as_name] = _Everything._LazyImportAs(name=name, as_name=as_name)
+
+    @staticmethod
+    def _get_directories_contents(paths):
+        contents = set()
+        for path in paths:
+            try:
+                listing = os.listdir(path)
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            contents.update(listing)
+        return contents
+
+    @staticmethod
+    def _get_paths_children_names(paths, prefix):
+        children_filenames = _Everything._get_directories_contents(paths=paths)
+        children_edges = {filename.partition(".")[0] for filename in children_filenames}
+        children_names = {f"{prefix}{edge}" for edge in children_edges if str.isidentifier(edge)}
+        return children_names
+
+    @staticmethod
+    def _get_module_children_names(module):
+        module_paths = getattr(module, "__path__", [])
+        return _Everything._get_paths_children_names(paths=module_paths, prefix=f"{module.__name__}.")
+
+    @staticmethod
+    def _get_toplevel_module_names():
+        return (
+            _Everything._get_paths_children_names(paths=sys.path, prefix="")
+            | set(sys.builtin_module_names)
+            | {'__main__'}
+         )
+
+    @staticmethod
+    def lazy_import_everything() -> None:
+        for toplevel_module_name in _Everything._get_toplevel_module_names():
+            _Everything._LazyImport._lazy_import(name=toplevel_module_name)
+
+    @staticmethod
+    def lazy_import_as(name: str, as_name: str) -> None:
+        _Everything._LazyImportAs._lazy_import_as(name=name, as_name=as_name)
+
+
+_Everything.lazy_import_everything()
+_Everything.lazy_import_as("numpy", "np")
+_Everything.lazy_import_as("pandas", "pd")
