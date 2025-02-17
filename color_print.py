@@ -26,8 +26,9 @@ def cprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
         print(*values, **print_options)  # type: ignore[call-overload]
 
 
-def cformat(value: Any) -> str:
-    highlighted_str = _highlight(value)
+def cformat(*values: list[Any], sep=" ", end="") -> str:
+    joined_values = sep.join(values) + end
+    highlighted_str = _highlight(joined_values)
 
     return highlighted_str
 
@@ -45,8 +46,9 @@ def cpprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
         print(*values, **print_options)  # type: ignore[call-overload]
 
 
-def cpformat(value: Any) -> str:
-    formatted_str = pp.pformat(value)
+def cpformat(*values: list[Any], sep=" ", end="") -> str:
+    joined_values = sep.join(values) + end
+    formatted_str = pp.pformat(joined_values)
     highlighted_formatted_str = _highlight(formatted_str)
 
     return highlighted_formatted_str
@@ -58,7 +60,11 @@ def _highlight(
     style: pygments.style.Style = "borland",
 ) -> str:
     if lexer is None:
-        lexer = pygments.lexers.PythonLexer()
+        lexer = pygments.lexers.PythonLexer(
+            stripall=False,
+            stripnl=False,
+            ensurenl=False,
+        )
 
     str_value = str(value)
 
@@ -67,11 +73,10 @@ def _highlight(
         lexer=lexer,
         formatter=_determine_formatter(style=style),
     )
-    highlighted_str = highlighted_str.removesuffix("\n")
 
-    highlighted_str_without_underlines = _remove_underlines(highlighted_str)
+    highlighted_str_without_ansi_underlines = _remove_ansi_underlines(highlighted_str)
 
-    return highlighted_str_without_underlines
+    return highlighted_str_without_ansi_underlines
 
 
 def _determine_formatter(
@@ -92,7 +97,7 @@ def _determine_formatter(
     return formatter
 
 
-def _remove_underlines(ansi_string: str) -> str:
+def _remove_ansi_underlines(ansi_string: str) -> str:
     # Define the ANSI escape codes for underlining
     underline_ansi_escape_codes = {
         # Underline start
