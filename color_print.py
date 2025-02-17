@@ -27,7 +27,8 @@ def cprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
 
 
 def cformat(*values: list[Any], sep=" ", end="") -> str:
-    joined_values = sep.join(values) + end
+    str_values = [str(value) for value in values]
+    joined_values = sep.join(str_values) + end
     highlighted_str = _highlight(joined_values)
 
     return highlighted_str
@@ -47,9 +48,13 @@ def cpprint(*values: list[Any], **print_options: dict[str, Any]) -> None:
 
 
 def cpformat(*values: list[Any], sep=" ", end="") -> str:
-    joined_values = sep.join(values) + end
-    formatted_str = pp.pformat(joined_values)
-    highlighted_formatted_str = _highlight(formatted_str)
+    formatted_values = [pp.pformat(value) for value in values]
+    highlighted_formatted_values = [
+        _highlight(formatted_value) for formatted_value in formatted_values
+    ]
+    highlighted_formatted_str = (
+        _highlight(sep).join(highlighted_formatted_values) + _highlight(end)
+    )
 
     return highlighted_formatted_str
 
