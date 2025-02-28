@@ -101,10 +101,10 @@ def file_path_to_module_name(file_path: str) -> str:
     return os.path.basename(file_path).removesuffix(".py")
 
 
-def indent(string: str, times: int) -> str:
+def indent(string: str, times: int, fill: str = 4 * " ") -> str:
     return re.sub(
         pattern=r"(?m)^",
-        repl=times * "    ",
+        repl=times * fill,
         string=string,
     )
 
