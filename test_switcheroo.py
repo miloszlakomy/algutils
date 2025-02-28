@@ -11,7 +11,7 @@ from algutils import switcheroo
 
 
 class Switcherooling(switcheroo.Switcheroo):
-    def load_switch_to(self, _unused_attribute_name):
+    def _load_switch_to(self, _unused_attribute_name):
         return ["q", "w", "e"]
 
 
